@@ -1,0 +1,38 @@
+Metadata:
+  # The name will also show up as the main folder for simulation
+  name: KraussDefault
+
+Blocks:
+
+  CFModelParameters:
+    model: "Krauss"
+    parameters:
+      tau:
+        val: null
+
+
+  CFOptimizeConfig: {}
+
+  Error:
+    method: "spacing"
+    error_func: "nrmse_s_v"
+    val: "${.nrmse_s_v}"
+    
+
+Pipeline:
+  executor: ray
+  parallel_proc: auto
+  pipeline:
+    - block: CalibrationPipeline
+      parallel: True
+      # queue_based: False
+      number_of_workers: 64
+      producers:
+        - function: external.functions.sumo_pipelines_adapter.loader_adapter.trajectory_pair_generator
+          config: ${Blocks.TrajectoryGenerator}
+      consumers:
+        - function: external.functions.sumo_pipelines_adapter.optimizer.dummy_optimize
+          config: ${Blocks.CFOptimizeConfig}
+      result_handler:
+        function: external.functions.sumo_pipelines_adapter.optimizer.dump_results
+        config: {}

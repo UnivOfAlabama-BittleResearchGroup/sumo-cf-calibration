@@ -1,0 +1,101 @@
+Metadata:
+  # The name will also show up as the main folder for simulation
+  name: W99Calibration
+
+Blocks:
+  CFModelParameters:
+    model: "W99"
+    parameters:
+      # tau:
+      #   val: ???
+      #   search_space: "uniform"
+      #   args:
+      #     - 0.5
+      #     - 5
+      # see line 63 in W99 src of sumo
+      # accel:
+      #   val: ???
+      #   search_space: "uniform"
+      #   args:
+      #     - 0.5
+      #     - 7
+      # see line 64 in W99 src of sumo
+      # decel:
+      #   val: ???
+      #   search_space: "uniform"
+      #   args:
+      #     - 0.5
+      #     - 7
+      minGap:  # this is cc0 in W99
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0
+          - 20
+      cc1:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.0
+          - 5
+      cc2:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.0
+          - 10
+      cc3:
+        val: ???
+        search_space: "uniform"
+        args:
+          - -20
+          - 0
+      cc4:
+        val: ???
+        search_space: "uniform"
+        args:
+          - -5
+          - 0
+      cc5:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.1
+          - 5
+      cc6:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.1
+          - 20
+      cc7:
+        val: ???
+        search_space: "uniform"
+        args:
+          - -1
+          - 1
+      cc8:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0
+          - 8
+
+      cc9:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0
+          - 8
+
+      speedFactor:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.75
+          - 1.5
+
+      actionStepLength:
+        val: ???
+        search_space: "choice"
+        args: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]

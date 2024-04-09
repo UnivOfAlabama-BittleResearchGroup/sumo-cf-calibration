@@ -1,0 +1,59 @@
+Metadata:
+  # The name will also show up as the main folder for simulation
+  name: IDMCalibration1Sec
+
+Blocks:
+  CFModelParameters:
+    model: "IDM"
+    parameters:
+      tau:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.1
+          - 5
+      accel:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.1
+          - 6
+      decel:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.1
+          - 7
+
+      speedFactor:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.75
+          - 1.8
+
+      actionStepLength:
+        val: ???
+        search_space: "choice"
+        args: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1]
+
+      minGap:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.1
+          - 10
+
+      delta:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 1
+          - 10
+
+      stepping:
+        val: ???
+        search_space: "uniform"
+        args:
+          - 0.1
+          - 1

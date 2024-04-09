@@ -1,0 +1,15 @@
+traci
+numpy
+pandas
+plotly
+nbformat
+omegaconf
+matplotlib
+seaborn
+SciencePlots
+sumolib
+scikit-learn
+ray
+polars
+nevergrad
+git+https://github.com/mschrader15/sumo-pipelines.git
