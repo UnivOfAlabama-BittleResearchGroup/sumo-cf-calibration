@@ -46,6 +46,7 @@ Trajectory pre-processing code is not included in this repository. The pre-proce
 │       └── ...
 ├── data
 │   ├── processed_followers.parquet  # Pre-processed follower trajectories
+│   ├── leaders.parquet  # smaller df describing leader follower relationships
 │   └── paper_calibration_results
 │       ├── calibrated_trajectories.parquet  # Trajectories with calibrated car-following models
 │       ├── paper_results.parquet # Results of the calibration analysis
@@ -67,6 +68,16 @@ Trajectory pre-processing code is not included in this repository. The pre-proce
     ├── net.net.xml
     └── route.rou.xml
 ```
+
+### Data Directory
+
+The data is stored in the `./data` directory using `git lfs`. You can download the data using the following command:
+
+```shell
+git lfs pull
+```
+
+`git lfs` can be installed by following the instructions [here](https://git-lfs.github.com/).
 
 ## Running the Calibration
 
@@ -98,7 +109,7 @@ The full analysis with all three car-following models can be run using the follo
 ```shell
 export PROJECT_ROOT=$(pwd)
 export PYTHONPATH="$PYTHONPATH:$(pwd)"
-export DATA_PATH="$PROJECT_ROOT/data/calibration"
+export DATA_PATH="$PROJECT_ROOT/data"
 
 ray stop
 ray start --head --num-cpus=<desired cpu num>
@@ -121,3 +132,10 @@ sumo-pipe $PROJECT_ROOT/config/sumo-pipelines/sumo_pipelines.yaml $PROJECT_ROOT/
 ```
 
 The results of the analysis will be stored according to the `Metadata.output_dir` parameter in the `./config/*.yaml` files.
+
+
+## Citation
+
+```bibtex
+< TODO >
+```

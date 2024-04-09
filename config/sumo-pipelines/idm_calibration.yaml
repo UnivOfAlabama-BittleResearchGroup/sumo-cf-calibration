@@ -1,6 +1,6 @@
 Metadata:
   # The name will also show up as the main folder for simulation
-  name: IDMCalibration1Sec
+  name: IDMCalibration
 
 Blocks:
   CFModelParameters:

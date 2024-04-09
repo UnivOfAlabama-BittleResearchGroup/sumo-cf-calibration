@@ -18,11 +18,9 @@ Blocks:
     generate_function: external.functions.trajectory_loaders.read_trajectories.database_loader
     kwargs:
       traj_file: "${oc.env:DATA_PATH}/processed_followers.parquet"
-      # all_leaders_file: "${oc.env:DATA_PATH}/candidate_leaders.parquet"
       follower_id: ${Blocks.TrajectoryGenerator.follower_id}
       leader_id: ${Blocks.TrajectoryGenerator.leader_id}
       step_length: ${Blocks.SimulationConfig.step_length}
-      # multi_leader: False
 
   SimulationConfig:
     start_time: 0
@@ -40,7 +38,6 @@ Blocks:
       - "--step-method.ballistic"
     target_lane: E2_0
     route_name: r_0
-    # simulation_output: ${Metadata.cwd}/sumo_output.txt
 
   CFOptimizeConfig:
     optimization_algo: "NGOpt"
@@ -51,10 +48,6 @@ Blocks:
     seed: ${Metadata.random_seed}
 
   Error:
-    # method: "spacing"
-    # error_func: "nrmse_s_v_a"
-    # val: "${.nrmse_s_v_a}"
-    # include_accel: 
     method: "spacing"
     error_func: "nrmse_s_v"
     val: "${.nrmse_s_v}"
@@ -66,7 +59,6 @@ Pipeline:
   pipeline:
     - block: CalibrationPipeline
       parallel: True
-      # queue_based: False
       number_of_workers: 64
       producers:
         - function: external.functions.sumo_pipelines_adapter.loader_adapter.trajectory_pair_generator

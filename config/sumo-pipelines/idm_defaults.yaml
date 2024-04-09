@@ -39,7 +39,6 @@ Pipeline:
   pipeline:
     - block: CalibrationPipeline
       parallel: True
-      # queue_based: False
       number_of_workers: 64
       producers:
         - function: external.functions.sumo_pipelines_adapter.loader_adapter.trajectory_pair_generator

@@ -9,7 +9,10 @@ seaborn
 SciencePlots
 sumolib
 scikit-learn
-ray
+pyarrow
+jinja2
+scikit-posthocs
+ray[tune]
 polars
 nevergrad
-git+https://github.com/mschrader15/sumo-pipelines.git
+git+https://github.com/mschrader15/sumo-pipelines.git@0.0.1

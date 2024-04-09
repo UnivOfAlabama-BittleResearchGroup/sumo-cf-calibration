@@ -10,16 +10,17 @@ def calc_accel(
 ) -> pl.DataFrame:
     return df.with_columns(
         pl.struct([f"{col}", time_col])
-        .map_elements(
+        .apply(
             lambda x: pl.Series(
                 name=f"{col}_accel",
                 values=np.gradient(
-                    x.struct[col].to_numpy(),
-                    x.struct[time_col].to_numpy(),
+                    x.struct[col],
+                    x.struct[time_col],
                 ),
                 dtype=pl.Float64,
             ),
             strategy="threading" if threading else "thread_local",
+            # return_dtype=pl.Float64,
         )
         .over(vehicle_col)
         .alias(f"{col}_accel")
