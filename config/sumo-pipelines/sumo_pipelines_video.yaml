@@ -1,0 +1,75 @@
+Metadata:
+  # The name will also show up as the main folder for simulation
+  author: mcschrader@crimson.ua.edu
+  output: ${oc.env:PROJECT_ROOT}/tmp/${Metadata.name}/${datetime.now:%m.%d.%Y_%H.%M.%S}
+  cwd: ${.output}/${.run_id}
+  run_id: Video
+  simulation_root: ${oc.env:PROJECT_ROOT}/sumo-xml
+  random_seed: 7788
+
+Blocks:
+  TrajectoryGenerator:
+    pair_file: "${oc.env:DATA_PATH}/leaders.parquet"
+    max_queue_size: 64
+    leader_id: 567
+    follower_id: [566, 'WBL1', 0, 1]
+
+  TrajectoryProcessing:
+    generate_function: external.functions.trajectory_loaders.read_trajectories.database_loader
+    kwargs:
+      traj_file: "${oc.env:DATA_PATH}/processed_followers.parquet"
+      follower_id: ${Blocks.TrajectoryGenerator.follower_id}
+      leader_id: ${Blocks.TrajectoryGenerator.leader_id}
+      step_length: ${Blocks.SimulationConfig.step_length}
+
+  SimulationConfig:
+    start_time: 0
+    end_time: 10_000
+    net_file: ${Metadata.simulation_root}/net.net.xml
+    gui: True
+    route_files:
+      - ${Metadata.simulation_root}/route.rou.xml
+    step_length: 0.1
+    additional_files: null
+    additional_sim_params:
+      - --seed
+      - ${Metadata.random_seed}
+      - --start
+      - "--step-method.ballistic"
+      - "-g"
+      - "${Metadata.simulation_root}/view.xml"
+      - --quit-on-end
+    target_lane: E2_0
+    route_name: r_0
+
+  CFOptimizeConfig:
+    optimization_algo: "NGOpt"
+    budget: 100
+    simulation_config: ${Blocks.SimulationConfig}
+    early_stopping: True
+    early_stopping_tolerance: 10
+    seed: ${Metadata.random_seed}
+
+  Error:
+    method: "spacing"
+    error_func: "nrmse_s_v"
+    val: "${.nrmse_s_v}"
+    include_accel: True
+
+Pipeline:
+  executor: ray
+  parallel_proc: auto
+  pipeline:
+    - block: CalibrationPipeline
+      parallel: false
+      number_of_workers: 1
+      queue_based: false
+      producers:
+        - function: external.functions.sumo_pipelines_adapter.loader_adapter.trajectory_pair_generator
+          config: ${Blocks.TrajectoryGenerator}
+      consumers:
+        - function: external.functions.sumo_pipelines_adapter.optimizer.optimize
+          config: ${Blocks.CFOptimizeConfig}
+      result_handler:
+        function: external.functions.sumo_pipelines_adapter.optimizer.dump_results
+        config: {}

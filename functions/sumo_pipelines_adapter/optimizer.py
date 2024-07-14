@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import importlib
+import os
 from pathlib import Path
 import time
 
@@ -13,6 +14,9 @@ import nevergrad as ng
 
 from functions.sumo import BasicRunner
 from functions.sumo_pipelines_adapter.cf_config import CFModelParameters
+
+
+RECORD_VIDEO = bool(os.environ.get("RECORD_VIDEO", False))
 
 
 def actionStepLength_constraint(x):
@@ -111,6 +115,7 @@ def optimize(
     # run the simulation
     runner.setup(
         g_config,
+        record_video=RECORD_VIDEO,
         # config.simulation_config,
     )
 

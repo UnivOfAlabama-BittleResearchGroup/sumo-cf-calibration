@@ -32,6 +32,18 @@ def trajectory_pair_generator(
     # load the trajectory pair file
     pair_df = pl.read_parquet(config.pair_file)
 
+    # supress the error for missing
+    try:
+        if OmegaConf.select(
+            global_config,
+            f"{dotpath}.leader_id",
+        ) is not None:
+            yield deepcopy(global_config)
+            return
+    # this bad practice, but I am lazy
+    except Exception as e:
+        pass
+            
     # iterate over the pairs
     for i, row in enumerate(pair_df.iter_rows(named=True)):
         new_conf = deepcopy(global_config)

@@ -13,6 +13,9 @@ from functions.sumo_pipelines_adapter.cf_config import CFModelParameters
 from copy import deepcopy
 from pathlib import Path
 
+import sumolib
+from shapely import line_interpolate_point
+from shapely.geometry import LineString
 import traci.constants as tc
 from typing import TYPE_CHECKING, Any
 
@@ -20,17 +23,17 @@ from typing import TYPE_CHECKING, Any
 # check if windows
 import platform
 
-try:
-    if platform.system() != "Windows":
-        import libsumo as traci
+# try:
+#     if platform.system() != "Windows":
+#         import libsumo as traci
 
-        LIBSUMO = True
-    else:
-        raise ImportError
-except ImportError:
-    import traci
+#         LIBSUMO = True
+#     else:
+#         raise ImportError
+# except ImportError:
+import traci
 
-    LIBSUMO = False
+LIBSUMO = False
 
 
 if TYPE_CHECKING:
@@ -48,19 +51,21 @@ class BasicRunner:
         self._initialized = False
 
         self._cf_params: CFModelParameters = None
+        self._record_video = False
 
     def _gen_traci_conn(self):
         # generate a random hash for the traci connection
         return str(uuid.uuid4())
         # return f"{uuidrandom.randint(0, 1000)}"
 
-    def setup(self, run_config: Root = None):
+    def setup(self, run_config: Root = None, record_video: bool = False):
         self._config = deepcopy(run_config)
         self._trajectories: VelocityData = load_function(
             self._config.Blocks.TrajectoryProcessing.generate_function
         )(**self._config.Blocks.TrajectoryProcessing.kwargs)
 
         self._cf_params = run_config.Blocks.CFModelParameters
+        self._record_video = record_video
 
         if self._initialized is False:
             self._init_sumo()
@@ -81,7 +86,18 @@ class BasicRunner:
         self._sim_step = int(self._config.Blocks.SimulationConfig.step_length * 1000)
         self._initialized = True
 
+        self._lane_linestring = LineString(
+            sumolib.net.readNet(
+                self._config.Blocks.SimulationConfig.net_file, withInternal=True
+            )
+            .getLane("E2_0")
+            .getShape(includeJunctions=True)
+        )
+
     def _start_sumo(self):
+        if self._record_video:
+            self._config.Blocks.SimulationConfig.gui = True
+
         if LIBSUMO:
             traci.start(
                 make_cmd(self._config.Blocks.SimulationConfig),
@@ -131,7 +147,12 @@ class BasicRunner:
 
         self._config.Blocks.SimulationConfig.additional_files = [f.name]
 
-        self._start_sumo()
+        try:
+            self._start_sumo()
+        except Exception as e:
+            self._traci.close(wait=False)
+            self._traci = None
+            self._start_sumo()
 
         res = self.float_step()
 
@@ -148,6 +169,17 @@ class BasicRunner:
         self.add_vehicle(
             self._trajectories.follow_data[0], follower_name, follower=True
         )
+
+        if self._record_video:
+            poi_pos = line_interpolate_point(
+                self._lane_linestring, distance=self._trajectories.follow_data[0].s + 40
+            )
+            self._traci.poi.add(
+                "leader_0",
+                poi_pos.x,
+                poi_pos.y,
+                color=(255, 0, 0, 255),
+            )
 
         # reset the sim time
         self._sim_time = int(self._traci.simulation.getTime() * 1000)
@@ -168,7 +200,7 @@ class BasicRunner:
 
         leader_traj = deepcopy(self._trajectories.lead_data)
         max_time = int(self._trajectories.max_time * 1000)
-
+        j = 0
         while (self._sim_time - start_time) < max_time:
             done = len(leader_traj) == 0
 
@@ -182,6 +214,7 @@ class BasicRunner:
                 <= int(leader_traj[0].time * 1000)
                 < ((self._sim_time - start_time) + self._sim_step)
             ):
+                j += 1
                 leader = leader_traj.pop(0)
 
                 if leader.velocity is None:
@@ -212,6 +245,44 @@ class BasicRunner:
 
             # get subscription results
             positions = self._traci.vehicle.getAllSubscriptionResults()
+
+            if self._record_video:
+                # prints(
+
+                poi_pos = self._lane_linestring.interpolate(
+                    self._trajectories.follow_data[j].s + 40
+                )
+
+                # if self._traci.poi.getIDCount() > 0:
+                self._traci.poi.setPosition(
+                    "leader_0",
+                    poi_pos.x,
+                    poi_pos.y,
+                )
+
+                if self._sim_time % 500 == 0:
+                    
+                    output_path = Path(self._config.Metadata.cwd) / f"iteration_{self._step_counter:03}"
+
+                    if not output_path.exists():
+                        output_path.mkdir(exist_ok=True, parents=True)
+
+                    self._traci.gui.screenshot(
+                        "View #0",
+                        str(output_path / f"time_{int(self._sim_time / 100):03}.png"),
+                    )
+                # self._traci.polygon.
+                # self._traci.poi.add(
+                #     f"leader_{int(self._sim_time)}",
+                #     poi_pos.x,
+                #     poi_pos.y,
+                #     color=(255, 0, 0, 255),
+                #     # height=50,
+                #     # width=50
+                # )
+
+            # print(f"Sim time: {self._sim_time}")
+            # print(positions)
 
             # print(f"Sim time: {self._sim_time}")
             # print(positions)
@@ -252,7 +323,7 @@ class BasicRunner:
                 print(f"Leader behind follower at time {self._sim_time}")
                 collision = True
                 break
-
+        self._step_counter += 1
         return sim_trajs, collision
 
     def cleanup_sim(self):
